@@ -1,16 +1,16 @@
-build: html html/images html/index.html
+build: docs docs/images docs/index.html
 
-html:
-	mkdir -v -p html
+docs:
+	mkdir -v -p docs
 
-html/images: images
-	mkdir -v -p html/images
-	rsync -a -v --delete images/ html/images/
+docs/images: images
+	mkdir -v -p docs/images
+	rsync -a -v --delete images/ docs/images/
 
-html/%.html: src/%.md style.css.html
+docs/%.html: src/%.md style.css.html
 	pandoc -s --from=markdown -H style.css.html -o $@ $<
 
 clean:
-	rm -fr ./html
+	rm -fr ./docs
 
 .PHONY: clean
