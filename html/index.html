@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+  
+   body {
+       font-family: "Open Sans", sans-serif;
+       font-size: 16px;
+       font-kerning: normal;
+       max-width: 800px;
+       line-height: 1.2;
+       text-align: justify;
+       margin: 2em auto;
+       padding-bottom: 5em;
+   
+   }
+  
+   .right-img {
+       padding-left: 5px;
+       float: right;
+   }
+  
+   .jobtype {
+       margin-bottom: 45px;
+   }
+  
+  </style>
+</head>
+<body>
+<h1 id="report">Report</h1>
+<h3 id="landlords-routinely-lie-on-their-permit-applications">Landlords routinely lie on their permit applications</h3>
+<p>In order to do any kind of building construction in New York City landlords must submit a form called <a href="http://www1.nyc.gov/assets/buildings/pdf/pw1.pdf">PW1</a> containing basic information about the application. At the end, there is a section called the <strong>Property Owner's Statements and Signatures</strong> where the property owner must certify the form and provide their contact information.</p>
+<p>The section contains a handful of simple yes/no questions about their building. It also has a warning: &quot;<em>Falsification of any statement is a misdemeanor and is punishable by a fine or imprisonment, or both</em>&quot;. Two of these questions are notable (paraphrased):</p>
+<ol style="list-style-type: decimal">
+<li><p>Will one or more of the units in the building be occupied during construction</p></li>
+<li><p>Does the building have &quot;occupied housing accommodations subject to rent control or rent stabilization&quot;</p></li>
+</ol>
+<p>Owners must tell the department of buildings two very basic, yet crucial facts about their building: will it be vacant and is it rent stabilized?</p>
+<p>Certainly, no one would risk <strong>jail time</strong> by falsifying something that can easily be proved...right?</p>
+<h2 id="data-gathering">Data Gathering</h2>
+<p>The DOB keeps a list of all submitted jobs on NYC's open data portal. This, unfortunately, <strong>doesn't</strong> include information on those question. However, the answers the questions on the PW1 can found on the DOB website through the biz information system.</p>
+<div class="figure">
+<img src="/images/jobtype.png" title="job types" class="right-img jobtype" />
+
+</div>
+<p>Using a list of 45,685 Tax Lots that likely contain rent-stabilized buildings and a dataset of all Department of Buildings jobs (gathered from February version of <a href="https://github.com/aepyornis/nyc-db">NYCDB</a>, I derived a list of 41,00 jobs active since January 2016 for rent-stabilized buildings. Due to the volume of jobs, I excluded applications for minor alternations (A3).</p>
+<p>Of these 41,00 the vast majority are A2 applications. It does include about 1,500 A1 jobs as well as hundreds of demolition and new building applications.</p>
+<p>These 41,000 jobs are for about 15,00 unique tax lots in the city.</p>
+<p>The data on the questions themselves were gathered by scraping the department of buildings website over a period of few weeks in early March.</p>
+<h3 id="how-the-landlords-answered-those-questions">How the landlords answered those questions</h3>
+<h4 id="question-on-vacancy">question on vacancy</h4>
+<div class="figure">
+<img src="/images/stabilized.png" title="answers to rent stabilization question" class="right-img" />
+
+</div>
+<p>58% of all applications reported <strong>&quot;yes&quot;</strong> that their buildings would vacant during construction while 40% answered <strong>&quot;no&quot;</strong>.</p>
+<p>While some percentage of buildings could be vacant, it's quite unbelievable that 40% of all buildings application for a permit over the past two years were vacant during construction.</p>
+<p>It's possible that some of the buildings had their rent-stabilized tennats relocated, noneless, it appears that fraud is widespread.</p>
+<h4 id="question-on-rent-stabilization">question on rent stabilization</h4>
+<p>Of the 41,000 application for buildings that are likely rent-stabilized a mere 31% reported that the building contained a rent-stabilized unit. It is hard to image there to be any other explanation for this other than systematic lying on permits by landlords.</p>
+<h3 id="finding-who-lied-on-the-question-on-rent-stablized-question">Finding who lied on the question on Rent-Stablized question</h3>
+<p>If a building contains rent stabilized units, an indicator will appear on their quarterly tax bill. John Krauss has done the work of extracting those rent-stabilized unit counts( see <a href="https://github.com/talos/nyc-stabilization-unit-counts">here</a> for more details). We can find out which landlord one the Department of Building something different from what they reported to the Department of Finance (DOF).</p>
+<p>I looked for buildings that had registered rent-stabilized units with the Department of Finance and found that about 25,139 jobs for unique 10,486 tax lots, over half of all submitted permits, likely lied on their department of buildings permits.</p>
+<h3 id="in-summary-over-10000-landlords-inproperly-filled-over-25000-job-applicactions-with-the-deparment-of-buildings.">In summary, over 10,000 landlords inproperly filled over 25,000 job applicactions with the deparment of buildings.</h3>
+</body>
+</html>

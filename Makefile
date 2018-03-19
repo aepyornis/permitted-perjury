@@ -1,4 +1,4 @@
-build: html html/images html/report.html
+build: html html/images html/index.html
 
 html:
 	mkdir -v -p html
