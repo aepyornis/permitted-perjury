@@ -19,7 +19,7 @@ Certainly, no one would risk **jail time** by falsifying something that can easi
 
 The DOB keeps a list of all submitted jobs on NYC's open data portal. This, unfortunately, **doesn't** include information on those question. However, the answers the questions on the PW1 can found on the DOB website through the biz information system.
 
-![](/images/jobtype.png "job types"){.right-img .jobtype}
+![](images/jobtype.png "job types"){.right-img .jobtype}
 
 Using a list of 45,685 Tax Lots that likely contain rent-stabilized buildings and a dataset of all Department of Buildings jobs (gathered from February version of [NYCDB](https://github.com/aepyornis/nyc-db), I derived a list of 41,00 jobs active since January 2016 for rent-stabilized buildings. Due to the volume of jobs, I excluded applications for minor alternations (A3).
 
@@ -33,7 +33,7 @@ The data on the questions themselves were gathered by scraping the department of
 
 #### question on vacancy
 
-![](/images/stabilized.png "answers to rent stabilization question"){.right-img }
+![](images/stabilized.png "answers to rent stabilization question"){.right-img }
 
 
 58% of all applications reported **"yes"** that their buildings would vacant during construction while 40% answered **"no"**.
