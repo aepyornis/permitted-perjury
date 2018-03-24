@@ -1,272 +1,300 @@
 #!/usr/bin/env python3
-'''
-Downloads tax bills for a BBL
-Adapted from https://github.com/talos/nyc-stabilization-unit-counts/blob/master/download.py
+"""
+Downloads Statement of Account from Department of Finance
 
-'''
-import requests
-import sys
-import bs4
-from urllib.parse import urljoin
-import time
-import os
-import logging
-import traceback
+borrows from: https://github.com/talos/nyc-stabilization-unit-counts/blob/master/download.py
+
+Required libraries: requests, beautifulsoup4, dateparser
+
+Install like such: ` pip3 requests beautifulsoup4 dateparser `
+
+Here's what going on: you submit a bbl in a form,
+and that form returns an html document...with a form that's
+already filled out. if you submit that second form you get
+back an html document with links to the tax bills.
+
+following? those links, however, are not to the documents
+themselves but to another html page, which sadly
+requires javascript to render the links to actual
+documents we are looking for! anyways, the documents
+seem to follow a pattern, so the titles of them can be
+used to generate links using the date of the document.
+
+"""
+from collections import namedtuple
+from time import sleep
 import re
+import sys
+import os
+import pathlib
 
-SEARCH_URL = 'http://webapps.nyc.gov:8084/CICS/fin1/find001i'
-LIST_URL = 'http://nycprop.nyc.gov/nycproperty/nynav/jsp/stmtassesslst.jsp'
+import dateparser
+import requests
+from bs4 import BeautifulSoup
 
 MINIMUM_YEAR = 2015
 
-SESSION = requests.session()
-adapter = requests.adapters.HTTPAdapter(max_retries=10)
-SESSION.mount('https://', adapter)
-SESSION.mount('http://', adapter)
+FOLDER = 'data'
+
+INTERMEDIATE_URL = "http://webapps.nyc.gov:8084/CICS/fin1/find001i"
+
+LIST_URL = 'http://nycprop.nyc.gov/nycproperty/nynav/jsp/stmtassesslst.jsp'
+
+SOA_LINK = "http://nycprop.nyc.gov/nycproperty/StatementSearch?bbl={bbl}&stmtDate={date}&stmtType=SOA"
+
+PAUSE_AFTER_INTERMEDIATE = 1
+PAUSE_BETWEEN_DOWNLOAD = 2
+PAUSE_BEFORE_RETRY = 15
+
+HEADERS = {
+    'User-Agent': "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62 Safari/537",
+    'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Referer": INTERMEDIATE_URL
+}
+DOCUMENT_HEADERS = HEADERS.copy().update({ 'Referer': LIST_URL})
 
 DOCS_TO_DOWNLOAD = [
     'Quarterly Statement of Account',   # Amounts paid, stabilized fees, other charges, mailing address
     'Quarterly Property Tax Bill',   # Amounts paid, stabilized fees, other, charges
 ]
 
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
-HANDLER = logging.StreamHandler(sys.stderr)
-HANDLER.setFormatter(logging.Formatter('%(asctime)-15s %(message)s'))
-LOGGER.addHandler(HANDLER)
+DOCS_REGEX = re.compile("({}|{})".format(*DOCS_TO_DOWNLOAD), flags=re.IGNORECASE)
+
+###
+# Helper tuples!
+#
+# BBL has borough, block, lot
+# Link is a simple struct with a href and a title
+# Document contains the link for a SOA with it's title and date
+
+BBL = namedtuple('BBL', ['borough', 'block', 'lot'])
+LINK = namedtuple('LINK', ['href', 'title'])
+DOCUMENT = namedtuple('DOCUMENT', ['title', 'link', 'date'])
+
+##
+# BBL helper functions
+#
+
+def split_bbl(bbl):
+    if len(bbl) != 10:
+        raise Exception("BBL ({}) is not the correct length".format(bbl))
+    return BBL(bbl[0], bbl[1:6], bbl[6:])
 
 
-class NYCServDownError(Exception):
+def character_bbl(bbl):
+    """ BBL -> str """
+    return bbl.borough + bbl.block.zfill(5) + bbl.lot.zfill(4)
+
+##
+# Document scraping and request helpers
+#
+
+# BBL -> dict
+
+def form_data(bbl):
+    """ Returns form data for post request to get intermediate html """
+    return {
+        "FFUNC": "C",
+        "FBORO": bbl.borough,
+        "FBLOCK": bbl.block,
+        "FLOT": bbl.lot,
+        "FEASE": ''
+    }
+
+
+def get_intermediate_html(bbl):
     """
-    Special exception for NYCServ is down.
+    Retrives html from the first request -- called "intermediate",
+    via a POST request.
+    It contains a form that will be resubmitted in list_html()
     """
-    pass
+    r = requests.post(INTERMEDIATE_URL, data=form_data(bbl), headers=HEADERS)
+    return r.text
 
 
-def handle_double_dot(list_url, href):
+# str -> tuple: url[str], form_data[dict]
+def parse_intermediate_html(html):
+    """" Retrives the url and form data from html """
+    soup = BeautifulSoup(html, "html.parser")
+    inputs = soup.find('form').find_all('input')
+    url = soup.find('form')['action']
+    form_data = dict([(i['name'], i['value']) for i in inputs])
+    return (url, form_data)
+
+
+# str --> str
+def get_list_html(intermediate_html):
     """
-    Deal with URLs
+    Return the html with list of documents via post request
     """
-    return urljoin(list_url, href)
-
-
-def handle_soalist(list_url, href):
-    """
-    Handle list of statement of accounts.
-    """
-    link_url = urljoin(list_url, href)
-
-    link_resp = SESSION.get(link_url, headers={'Referer': list_url})
-    link_soup = bs4.BeautifulSoup(link_resp.text, "html.parser")
-
-    statements = link_soup.select('a[href^="../../StatementSearch"]')
-
-    if statements:
-        statement_href = statements[0].get('href')
-        return urljoin(list_url, statement_href)
-
-
-def find_extension(resp):
-    """
-    Extract whether a requests response is for HTML or PDF.
-    """
-    content_type = resp.headers['Content-Type']
-    if 'html' in content_type:
-        return 'html'
-    elif 'pdf' in content_type:
-        return 'pdf'
-
-
-def save_file_from_stream(resp, filename):
-    """
-    Save a file from a streamed response
-    """
-    #chunk_size = 1024
-    with open(filename + '.' + find_extension(resp), 'wb') as fd: # pylint: disable=invalid-name
-        fd.write(resp.content)
-        #for chunk in resp.iter_content(chunk_size):
-        #    fd.write(chunk)
+    url, post_data = parse_intermediate_html(intermediate_html)
+    r = requests.post(url, data=post_data, headers=HEADERS)
+    return r.text
 
 
 def extract_year(docname):
-    """
-    Extracts Year from docname
-    """
+    """ Extracts year from docname """
     match = re.search("(?<=[ ])(\d{4})(?=[ ])", docname)
     if match:
         return int(match.group(1))
 
 
-def strain_soup(bbl, soup, target, get_statement_url):
+def document_titles(list_html):
     """
-    Pull out all PDFs or HTML pages from a NYCServ soup, targetting certain
-    links (`target`) and using `get_statement_url` to get the correct href for
-    the actual statement.
+    Extracts titles of the links for Quarterly Statement of Accounts
     """
-    for statement in soup.select(target):
-        docname = statement.text.strip()
-        if docname.split(' - ')[1] not in DOCS_TO_DOWNLOAD:
-            LOGGER.info('Not worried about doctype "%s" for BBL %s, skipping',docname, bbl)
-            continue
+    soup = BeautifulSoup(list_html, "html.parser")
 
-        bbldir = os.path.join('data', bbl)
-        
-        filenames = ['.'.join(f.split('.')[:-1]) or f
-                     for f in os.listdir(bbldir)]
-
-        if docname in filenames:
-            LOGGER.info('Already downloaded "%s" for BBL %s, skipping', docname, bbl)
-            continue
-
-        statement_url = get_statement_url(LIST_URL, statement.get('href'))
-        if not statement_url:
-            LOGGER.warn('Could not get statement URL for %s in %s', docname, bbl)
-
-        # Don't download files in they are before the minium year
-        if extract_year(docname) < MINIMUM_YEAR:
-            LOGGER.info('Skipping "%s" - document released before %s', docname, MINIMUM_YEAR)
-            continue
-
-        LOGGER.info('Downloading %s: %s', docname, statement_url)
-
-        filename = os.path.join(bbldir, docname)
-        resp = SESSION.get(statement_url, headers={'Referer': LIST_URL}, stream=True)
-
-        save_file_from_stream(resp, filename)
-
-        time.sleep(1)
+    titles = []
+    for a in soup.find_all('a', href=True):
+        title = a.text.strip()
+        if title != '' and extract_year(title):
+            if DOCS_REGEX.search(title):
+                titles.append(title)
+    return titles
 
 
-def search(borough=None, house_number=None, street=None, block=None, lot=None):
+def get_titles_for_bbl(bbl):
+    intermediate_html = get_intermediate_html(bbl)
+    sleep(PAUSE_AFTER_INTERMEDIATE)
+    list_html = get_list_html(intermediate_html)
+    return document_titles(list_html)
+
+
+def title_to_document(title, bbl):
     """
-    Search using NYCServ interface for a list of tax bills.
+    turns title into a DOCUMENT with link, title, and date
     """
-    #if block and lot:
-    #    data['FBLOCK'] = ('00000%s' % block)[-5:]
-    #    data['FLOT'] = ('0000%s' % lot)[-4:]
-    #    data['FEASE'] = ''
-    #    data['FFUNC'] = 'C'
-    if not borough:
-        raise Exception("Need borough")
-    if block and lot:
-        block = str(block).zfill(5)
-        lot = str(lot).zfill(4)
-        bbl = '{}-{}-{}'.format(borough, block, lot)
-        form = {
-            'DFH_ENTER': 'PROCESSING',
-            'FFUNC': 'A',
-            'FMSG2': '02/03/06 10:30AM -       B4 5000-SEND-VARIABLES         '
-                     '                        ',
-            'bblAcctKeyIn1': borough,
-            'bblAcctKeyIn2': block, #'01280',
-            'bblAcctKeyIn3': lot, #'0058',
-            'bblAcctKeyIn4': ' ',
-            'ownerName': '                                                                     ',
-            'ownerName1': '                                                                      ',
-            'ownerName2': '                                                                      ',
-            'ownerName3': '                                                                      ',
-            'ownerName4': '                                                                      ',
-            'ownercount': '', # '1',
-            'q49_block_id': block, #'01280',
-            'q49_boro': borough, #'3',
-            'q49_lot': lot, #'0058',
-            'q49_prp_ad_city': 'New york            ',
-            'q49_prp_ad_street_no': '', # '991     ',
-            'q49_prp_cd_addr_zip': '', #'11225',
-            'q49_prp_cd_state': 'NY',
-            'q49_prp_id_apt_num': '     ',
-            'q49_prp_nm_street': '', #'CARROLL STREET                   ',
-            'returnMsg': 'Note:'
-        }
-        #form = {
-        #     'q49_boro': borough,
-        #     'q49_block_id': block,
-        #     'q49_lot': lot
-        #}
+    date = dateparser.parse(title.split('-')[0].strip())
+    link = SOA_LINK.format(bbl=character_bbl(bbl), date=date.strftime('%Y%m%d'))
+    return DOCUMENT(title, link, date)
+
+
+# BBL -> [DOCUMENT]
+def documents_for_bbl(bbl):
+    """
+    Downloads and parses list of tax bills for the given bbl
+    """
+    titles = get_titles_for_bbl(bbl)
+    return [title_to_document(title, bbl) for title in titles]
+
+##
+# Downloading document utilities
+#
+
+def file_exists(filepath):
+    return os.path.isfile(filepath) and os.stat(filepath).st_size > 0
+
+
+def document_exists(doc, bbl):
+    return file_exists(title_to_path(doc.title, bbl, 'pdf')) or file_exists(title_to_path(doc.title, bbl, 'html'))
+
+
+def find_extension(resp):
+    """ Extract whether a requests response is for HTML or PDF. """
+    content_type = resp.headers['Content-Type']
+    if 'html' in content_type:
+        return 'html'
+    elif 'pdf' in content_type:
+        return 'pdf'
     else:
-        data = {
-            'FBORO': borough,
-        }
-        if street and house_number:
-            data['FSTNAME'] = street
-            data['FHOUSENUM'] = house_number
-        else:
-            raise Exception("Need street and housenumber if not searching by BBL")
-        resp = SESSION.post(SEARCH_URL, data=data)
+        raise "Unknown content type: {}".format(content_type)
 
-        # Extract necessary form content based off of address
-        soup = bs4.BeautifulSoup(resp.text, "html.parser")
-        inputs = soup.form.findAll('input')
-        form = dict([(i.get('name'), i.get('value')) for i in inputs])
 
-        # Get property tax info page
-        try:
-            bbl = '{}-{}-{}'.format(form['q49_boro'],
-                                    form['q49_block_id'],
-                                    form['q49_lot'])
-        except KeyError:
-            raise NYCServDownError(resp.text)
-            #LOGGER.error('No BBL found for %s', data)
-            #return
+def title_to_path(title, bbl, ext):
+    file_name = title.strip().replace(' ', '_') + '.' + ext
+    return os.path.join(FOLDER, character_bbl(bbl), file_name)
 
-    LOGGER.info('Pulling down %s', bbl)
-    if not os.path.exists(os.path.join('data', bbl)):
-        os.makedirs(os.path.join('data', bbl))
 
-    resp = SESSION.post(LIST_URL, data=form)
-
-    # Maintenance page?
-    if len(resp.text) == 7419:
-        raise NYCServDownError(resp.text)
-
-    soup = bs4.BeautifulSoup(resp.text, "html.parser")
-
-    strain_soup(bbl, soup, 'a[href^="../../"]', handle_double_dot)
-    strain_soup(bbl, soup, 'a[href^="soalist.jsp"]', handle_soalist)
-
-def main(*args):
+def save_file(resp, doc, bbl):
     """
-    Main function, called once for each BBL.
+    Saves response to disk with file path based on content_type and bbl
     """
-    down_for_maintenance = True
-    while down_for_maintenance:
-        down_for_maintenance = False
+    filepath = title_to_path(doc.title, bbl, find_extension(resp))
+    with open(filepath, 'wb') as f:
+            for chunk in resp:
+                f.write(chunk)
+
+
+def retry(func):
+    def wrapper(*args):
         try:
+            func(*args)
+        except requests.exceptions.RequestException:
+            print("Connection Error....Waiting 15 seconds", file=sys.stderr)
+            sleep(PAUSE_BEFORE_RETRY)
             try:
-                search(borough=args[0], block=int(args[1]), lot=int(args[2]))
-            except ValueError:
-                search(house_number=args[0], street=args[1], borough=args[2])
-        except NYCServDownError as exc:
-            down_for_maintenance = True
-        except requests.ConnectionError as exc:
-            if 'Connection aborted.' in str(exc[0]):
-                down_for_maintenance = True
-            else:
-                raise
-        except Exception as exc:  # pylint: disable=broad-except
-            LOGGER.error(traceback.format_exc())
-            LOGGER.error(exc)
-
-        if down_for_maintenance:
-            LOGGER.warn(u"NYCServ appears to be down, waiting: '%s'", exc)
-            time.sleep(10)
+                func(*args)
+            except requests.exceptions.RequestException:
+                print("Connection Error....Waiting 30 seconds", file=sys.stderr)
+                sleep(PAUSE_BEFORE_RETRY * 2)
+                func(*args)
+    return wrapper
 
 
-def split_bbl(bbl):
-    if len(bbl) != 10:
-        raise Exception("BBL is not the correct length")
-    return (bbl[0], int(bbl[1:6]), int(bbl[6:]))
+@retry
+def download_doc(doc, bbl):
+    """
+    Downloads document and saves to file.
+
+    It won't download for the following reasons:
+      - file already exists
+      - year is before the minium year set at top of file
+    """
+
+    if document_exists(doc, bbl):
+        print("{} exists already".format(doc.title))
+        return
+
+    if doc.date.year < MINIMUM_YEAR:
+        print("{} is from before {}".format(doc.title, MINIMUM_YEAR))
+        return
+
+    r = requests.get(doc.link, headers=DOCUMENT_HEADERS, stream=True)
+
+    if r.status_code == 200:
+        save_file(r, doc, bbl)
+        print("saved {}".format(doc.title))
+        sleep(PAUSE_BETWEEN_DOWNLOAD)
+    else:
+        msg = "Tried to download {}, but it failed!".format(doc.title)
+        print(msg, file=sys.stderr)
+
+
+@retry
+def download_docs_for_bbl(input_bbl):
+    """
+    downloads and saves document given a 10 character bbl
+    """
+    bbl = split_bbl(input_bbl)
+    pathlib.Path(os.path.join(FOLDER, character_bbl(bbl))).mkdir(parents=True, exist_ok=True)
+    for doc in documents_for_bbl(bbl):
+        download_doc(doc, bbl)
+
+
+def download_for_many(filepath):
+    """
+    reads the first 10 characters of each line as as bbl.
+    You can use any csv file or text file as long as the first
+    columns is the bbls
+    """
+    with open(filepath, 'r') as f:
+        for line in f:
+            bbl = line[0:10]
+            download_docs_for_bbl(bbl)
+            sleep(PAUSE_BETWEEN_DOWNLOAD)
+
+
+def main():
+    if len(sys.argv) == 1:
+        raise "Missing argument. requires file path or bbl"
+
+    if re.match('^(1|2|3|4|5){1}\d{9}$', sys.argv[1]):
+        download_docs_for_bbl(sys.argv[1])
+    else:
+        download_for_many(sys.argv[1])
+
 
 if __name__ == '__main__':
-    # use: ./dof_download BBL
-    main(*split_bbl(sys.argv[1]))
-
-    # if len(sys.argv) == 2:
-    #     with open(sys.argv[1]) as infile:
-    #         for line in infile:
-    #             main(*line.strip().split('\t'))
-    # elif len(sys.argv) == 4:
-    #     main(sys.argv[1], sys.argv[2], sys.argv[3])
-    # else:
-    #     sys.stderr.write("Should be called with one arg for tab-delimited file, three args for\nhousenum/streetname/borough number.")
-    #     sys.exit(1)
+    main()
