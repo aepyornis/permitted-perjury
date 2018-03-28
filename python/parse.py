@@ -84,7 +84,6 @@ def parse_table(soup, question):
         return 'no'
         # return False
     return 'blank'
-    #return None
 
 
 def blank_parse(job):
@@ -120,7 +119,6 @@ def parse_jobs_csv():
             writer.writeheader()
             for row in reader:
                 try:
-                    # print("parsing: {}".format(row['job']))
                     soup = get_soup(row['job'])
                     if soup:
                         writer.writerow({**row, **parse(soup, row['job'])})

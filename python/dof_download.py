@@ -6,7 +6,7 @@ borrows from: https://github.com/talos/nyc-stabilization-unit-counts/blob/master
 
 Required libraries: requests, beautifulsoup4, dateparser
 
-Install like such: ` pip3 requests beautifulsoup4 dateparser `
+Install like such: ` pip3 install requests beautifulsoup4 dateparser `
 
 Here's what going on: you submit a bbl in a form,
 and that form returns an html document...with a form that's
@@ -267,6 +267,7 @@ def download_docs_for_bbl(input_bbl):
     """
     downloads and saves document given a 10 character bbl
     """
+    print("+-------{}-------+".format(input_bbl))
     bbl = split_bbl(input_bbl)
     pathlib.Path(os.path.join(FOLDER, character_bbl(bbl))).mkdir(parents=True, exist_ok=True)
     for doc in documents_for_bbl(bbl):
