@@ -289,7 +289,7 @@ def download_for_many(filepath):
 
 def main():
     if len(sys.argv) == 1:
-        raise "Missing argument. requires file path or bbl"
+        raise Exception("Missing argument. requires file path or bbl")
 
     if re.match('^(1|2|3|4|5){1}\d{9}$', sys.argv[1]):
         download_docs_for_bbl(sys.argv[1])
