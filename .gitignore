@@ -1,3 +1,6 @@
 /images
 venv
 data
+*.tar.gz
+dof-download
+*.csv
