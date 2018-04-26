@@ -37,7 +37,7 @@ FROM
 WHERE
   dobjobs.id IS NOT NULL
   AND dobjobs.jobtype <> 'A3'
-  AND dobjobs.latestactiondate >= '2016-01-01'
+  AND dobjobs.prefilingdate >= '2016-01-01'
 GROUP BY
   dobjobs.job,
   r.ucbbl
