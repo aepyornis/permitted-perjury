@@ -14,7 +14,7 @@ function __files_downloaded -a bbl job
     end
 end
 
-set out_file 'liars.csv'
+set out_file 'possible_liars.csv'
 set headers (string join "," (head -n 1 jobs.csv) 'rentStabAnswer' 'liarStatus' 'liar' 'z_unit_count_15' 'z_unit_count_16' 'z_unit_count_17' )
 
 echo $headers > $out_file
