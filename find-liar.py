@@ -44,10 +44,13 @@ bbl_info_path = str(Path.home().joinpath('.nyc-data', 'bbl', BBL, '{}.json'.form
 bbl_info = read_json(bbl_info_path)
 
 
-if job_year not in bbl_info['dof']['unitCounts']:
+dof_year = str(int(job_year) + 1)
+
+
+if dof_year not in bbl_info['dof']['unitCounts']:
     stabilized_in_year = None
 else:
-    stabilized_in_year = (bbl_info['dof']['unitCounts'][job_year] > 0)
+    stabilized_in_year = (bbl_info['dof']['unitCounts'][dof_year] > 0)
 
 
 if (not rent_stab_answer) and bbl_info['dof']['rentStabilized']:
