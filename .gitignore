@@ -1,6 +1,7 @@
-/images
 venv
 data
 *.tar.gz
-dof-download
 *.csv
+*.zip
+package-lock.json
+*-checkpoint.ipynb

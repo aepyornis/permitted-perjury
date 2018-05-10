@@ -31,24 +31,33 @@ liars.csv: possible_liars.csv
 liars.zip: liars.csv
 	./liars-zip.fish
 
+
+############
+# notebook #
+############
+
+notebook-setup:
+	python3 -m venv notebook/venv
+	notebook/venv/bin/pip3 install jupyter pandas matplotlib
+
+notebook-serve:
+	notebook/venv/bin/jupyter --ip=127.0.0.1
+
+
 ##########
 # report #
 ##########
 
-report: docs docs/images docs/index.html
+report: docs docs/index.html
 
 docs:
 	mkdir -v -p docs
 
-docs/images: images
-	mkdir -v -p docs/images
-	rsync -a -v --delete images/ docs/images/
-
-docs/%.html: src/%.md style.css.html
+docs/%.html: report/%.md style.css.html
 	pandoc -s --from=markdown -H style.css.html -o $@ $<
 
 clean:
 	rm -fr ./docs
 
-.PHONY: clean
+.PHONY: clean notebook-setup
 .EXPORT_ALL_VARIABLES:
