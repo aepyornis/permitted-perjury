@@ -19,27 +19,27 @@ Certainly, no one would risk **jail time** by falsifying something that can easi
 
 The DOB keeps a [list](https://data.cityofnewyork.us/Housing-Development/DOB-Job-Application-Filings/ic3t-wcy2/data) of all submitted jobs on NYC's open data portal. This, unfortunately, **doesn't** include information on those questions. However, the answers to the questions on the PW1 can be found on the DOB website through the [buildings information system](http://a810-bisweb.nyc.gov/bisweb/bsqpm01.jsp).
 
-![](images/jobtype.png "job types"){.right-img .jobtype}
-
 Using a list of 45,685 Tax Lots that likely contain rent-stabilized buildings and a dataset of all Department of Buildings jobs (gathered from February version of [NYCDB](https://github.com/aepyornis/nyc-db), I derived a list of 27,00 jobs active since January 2016 for rent-stabilized buildings. Due to the volume of jobs, I excluded applications for minor alternations (A3).
 
 Of these 27,000 the vast majority are A2 applications. It does include about 900 A1 jobs as well as hundreds of demolition and new building applications.
 
 These 27,000 jobs are for about 11,00 unique tax lots in the city.
 
-The data on the questions themselves were gathered by scraping the department of buildings website over a period of few weeks in March and April.
+The data on the questions themselves were gathered by scraping the department of buildings website over a period of few weeks in March and April. The rent stabilization data was obtained by downloading and parsing the Department of Finance quarterly tax bills, which include a registration fee for rent-stabilized units.
 
 
 ### How the landlords answered the question
 
-21% of all permits examined (~5000) were found to have falsely answered their question on rent-stabilization.  An additional 25% (~6,500) are likely to be liars as well. These likely liars have registered rent-stabilized units in prior years.
+21% of all permits examined (~5000) were found to have falsely answered their question on rent-stabilization. These permits had registered rent-stabilized units with the department of finance in the year following the permit application. An additional 25% (~6,500) are likely to be liars as well. These likely liars have registered rent-stabilized units in prior years.
 
 In short there appears to be systematic lying on permits by landlords. Many thousands of permits are regularly submitted and approved with fraudulent information.
 
 
-### Closer look at 2016
-
 Since 2016 is the latest year with complete Department of Finance data, so we can get a better picture. Of the 13,000 permits examined in 2016, 44% were found to contain falsified information.
+
+### Where's there smoke there's fire: lead paint violators
+
+Landlords who falsify their permits are often unscrupulous in other ways. 422 buildings (on 765 permits) also had lead paint violations in the past few years.
 
 
 

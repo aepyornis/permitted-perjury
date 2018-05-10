@@ -31,6 +31,12 @@ liars.csv: possible_liars.csv
 liars.zip: liars.csv
 	./liars-zip.fish
 
+##############
+# Lead paint #
+##############
+
+lead_paint_bbls.csv: sql/lead_paint_violations.sql
+	psql -c "COPY ( $(shell cat sql/lead_paint_violations.sql) ) TO STDOUT WITH CSV HEADER DELIMITER ','"  > lead_paint_bbls.csv
 
 ############
 # notebook #
@@ -59,5 +65,5 @@ docs/%.html: report/%.md style.css.html
 clean:
 	rm -fr ./docs
 
-.PHONY: clean notebook-setup
+.PHONY: clean notebook-setup notebook-serve
 .EXPORT_ALL_VARIABLES:
