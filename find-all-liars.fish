@@ -1,5 +1,11 @@
 #!/usr/bin/env fish
-source $BBLER_PATH/lib/functions.fish
+
+if test -e $BBLER_PATH/lib/functions.fish
+    source $BBLER_PATH/lib/functions.fish
+else
+    echo "Failed to source BBLER functions. Is BBLER installed?" 1>&2
+    exit 1
+end
 
 
 function __files_downloaded -a bbl job
@@ -35,14 +41,14 @@ tail -n +2 jobs.csv | while read -l line
 
     # run bbler to get lot'o'info about the tax lot for this job
     # bbler stores data in ~/.nyc-data and won't re-downloaded
-    # it it already exists
+    # it it already exists 
     bbler $bbl
 
     # bbler will usually download and parse the data we need.
     # But it probably only succeeds about 80% of the time
     # (such is life with parsing pdfs from slow city websites)
     # We will attempt to re download and parse them here
-    if not __files_downloaded
+    if not __files_downloaded $bbl $job
 	download_and_parse_job $job
     end
     
