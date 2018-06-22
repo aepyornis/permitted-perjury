@@ -43,11 +43,11 @@ lead_paint_bbls.csv: sql/lead_paint_violations.sql
 ############
 
 notebook-setup:
-	python3 -m venv notebook/venv
-	notebook/venv/bin/pip3 install jupyter pandas matplotlib
+	python3 -m venv notebook/venv --without-pip --system-site-packages
+	notebook/venv/bin/python3 -m pip install jupyter pandas matplotlib
 
 notebook-serve:
-	notebook/venv/bin/jupyter --ip=127.0.0.1
+	notebook/venv/bin/jupyter notebook --ip=127.0.0.1
 
 
 ##########
