@@ -44,15 +44,15 @@
 <p>Certainly, no one would risk <strong>jail time</strong> by falsifying something that can easily be proved...right?</p>
 <h2 id="data-gathering">Data Gathering</h2>
 <p>The DOB keeps a <a href="https://data.cityofnewyork.us/Housing-Development/DOB-Job-Application-Filings/ic3t-wcy2/data">list</a> of all submitted jobs on NYC's open data portal. This, unfortunately, <strong>doesn't</strong> include information on those questions. However, the answers to the questions on the PW1 can be found on the DOB website through the <a href="http://a810-bisweb.nyc.gov/bisweb/bsqpm01.jsp">buildings information system</a>.</p>
-<p>Using a list of 45,685 Tax Lots that likely contain rent-stabilized buildings and a dataset of all Department of Buildings jobs (gathered from February version of <a href="https://github.com/aepyornis/nyc-db">NYCDB</a>, I derived a list of 27,00 jobs active since January 2016 for rent-stabilized buildings. Due to the volume of jobs, I excluded applications for minor alternations (A3).</p>
-<p>Of these 27,000 the vast majority are A2 applications. It does include about 900 A1 jobs as well as hundreds of demolition and new building applications.</p>
-<p>These 27,000 jobs are for about 11,00 unique tax lots in the city.</p>
-<p>The data on the questions themselves were gathered by scraping the department of buildings website over a period of few weeks in March and April. The rent stabilization data was obtained by downloading and parsing the Department of Finance quarterly tax bills, which include a registration fee for rent-stabilized units.</p>
+<p>Using a list of 45,685 Tax Lots that likely contain rent-stabilized buildings and a dataset of all Department of Buildings jobs (gathered from February version of <a href="https://github.com/aepyornis/nyc-db">NYCDB</a>, I derived a list of 31,000 jobs active since January 2016 for rent-stabilized buildings. Due to the volume of jobs, I excluded applications for minor alternations (A3).</p>
+<p>Of these 31,000 the vast majority are A2 applications. It does include over 900 A1 jobs as well as hundreds of demolition and new building applications.</p>
+<p>These 31,000 jobs are for about 12,00 unique tax lots in the city.</p>
+<p>The data on the questions themselves were gathered by scraping the department of buildings website over a period of a few months. The rent stabilization data was obtained by downloading and parsing the Department of Finance quarterly tax bills, which include a registration fee for rent-stabilized units.</p>
 <h3 id="how-the-landlords-answered-the-question">How the landlords answered the question</h3>
-<p>21% of all permits examined (~5000) were found to have falsely answered their question on rent-stabilization. These permits had registered rent-stabilized units with the department of finance in the year following the permit application. An additional 25% (~6,500) are likely to be liars as well. These likely liars have registered rent-stabilized units in prior years.</p>
+<p>19% (~6000) of all job applications examined were found to have falsely answered their question on rent-stabilization. These permits had registered rent-stabilized units with the department of finance in the year following the permit application. An additional 26% (~8,000) are likely to be liars as well. These likely liars have registered rent-stabilized units in prior years.</p>
 <p>In short there appears to be systematic lying on permits by landlords. Many thousands of permits are regularly submitted and approved with fraudulent information.</p>
 <p>Since 2016 is the latest year with complete Department of Finance data, so we can get a better picture. Of the 13,000 permits examined in 2016, 44% were found to contain falsified information.</p>
 <h3 id="wheres-there-smoke-theres-fire-lead-paint-violators">Where's there smoke there's fire: lead paint violators</h3>
-<p>Landlords who falsify their permits are often unscrupulous in other ways. 422 buildings (on 765 permits) also had lead paint violations in the past few years.</p>
+<p>Landlords who falsify their permits are often unscrupulous in other ways. 449 buildings (on 812 permits) also had recent lead paint violations</p>
 </body>
 </html>
