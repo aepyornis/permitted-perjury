@@ -4,7 +4,7 @@
 
 In order to do any kind of building construction in New York City landlords must submit a form called [PW1](http://www1.nyc.gov/assets/buildings/pdf/pw1.pdf) containing basic information about the application. At the end of the PW1, there is a section called the **Property Owner's Statements and Signatures** where the property owner must certify the form and provide their contact information.
 
-The section contains a handful of simple yes/no questions which the owner must fill out regarding their building. It also has a warning: "Falsification of any statement is a misdemeanor and is punishable by a fine or imprisonment, or both_". Two of these questions are notable (paraphrased):
+The section contains a handful of simple yes/no questions which the owner must fill out regarding their building. It also has a warning: "Falsification of any statement is a misdemeanor and is punishable by a fine or imprisonment, or both". Two of these questions are notable (paraphrased):
 
 1) Will one or more of the units in the building be occupied during construction
 
@@ -34,13 +34,8 @@ The data on the questions themselves were gathered by scraping the department of
 
 In short there appears to be systematic lying on permits by landlords. Many thousands of permits are regularly submitted and approved with fraudulent information.
 
-
 Since 2016 is the latest year with complete Department of Finance data, so we can get a better picture. Of the 13,000 permits examined in 2016, 44% were found to contain falsified information.
 
-### Where's there smoke there's fire: lead paint violators
+### Liars with lead paint violators
 
-Landlords who falsify their permits are often unscrupulous in other ways. 449 buildings (on 812 permits) also had recent lead paint violations
-
-
-
-
+Landlords who falsify their permits are often unscrupulous in other ways. 449 buildings (on 812 permits) also had recent lead paint violations.
