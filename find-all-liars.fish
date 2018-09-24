@@ -39,15 +39,14 @@ tail -n +2 jobs.csv | while read -l line
     # 	continue
     # end
 
-    # run bbler to get lot'o'info about the tax lot for this job
-    # bbler stores data in ~/.nyc-data and won't re-downloaded
-    # it it already exists 
+    # Run bbler to get lot'o'info about the tax lot for this job
+    # bbler stores data in ~/.nyc-data and it won't re-downloaded files that already exist.
     bbler $bbl
 
     # bbler will usually download and parse the data we need.
     # But it probably only succeeds about 80% of the time
     # (such is life with parsing pdfs from slow city websites)
-    # We will attempt to re download and parse them here
+    # We will attempt to re download and parse them again.
     if not __files_downloaded $bbl $job
 	download_and_parse_job $job
     end
