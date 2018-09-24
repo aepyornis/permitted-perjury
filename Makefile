@@ -59,8 +59,10 @@ report: docs docs/index.html
 docs:
 	mkdir -v -p docs
 
+report_title := Investigating falsified building permits
+
 docs/%.html: report/%.md style.css.html
-	pandoc -s --from=markdown -H style.css.html -o $@ $<
+	pandoc -s --from=markdown -M title="$(report_title)" -H style.css.html -o $@ $<
 
 clean:
 	rm -fr ./docs

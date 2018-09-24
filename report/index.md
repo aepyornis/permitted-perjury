@@ -1,5 +1,3 @@
-# Permitted Perjury
-
 ### Landlords routinely lie on their permit applications
 
 In order to do any kind of building construction in New York City landlords must submit a form called [PW1](http://www1.nyc.gov/assets/buildings/pdf/pw1.pdf) containing basic information about the application. At the end of the PW1, there is a section called the **Property Owner's Statements and Signatures** where the property owner must certify the form and provide their contact information.
